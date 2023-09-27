@@ -1,0 +1,1 @@
+1. Unutar direktorijuma `kaggle/` postaviti *kaggle.json* fajl sa Kaggle-a.
