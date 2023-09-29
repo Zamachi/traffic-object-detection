@@ -1,4 +1,4 @@
-import torch, os, pretty_errors, argparse, subprocess
+import os, pretty_errors, argparse, subprocess
 from model import test_model, load_model
 
 os.environ['KAGGLE_CONFIG_DIR']="./kaggle"
@@ -37,11 +37,20 @@ def download_dataset():
         print("Kaggle.json created at ./kaggle")
     
     if(not os.path.exists("./dataset")):
-       os.makedirs("./dataset")
-       import kaggle
-       kaggle.api.authenticate()
-       kaggle.api.dataset_download_files(dataset='yusufberksardoan/traffic-detection-project', path='./dataset', unzip=True)
-       print("Dataset downloaded!")
+        os.makedirs("./dataset")
+        try:
+            import kaggle
+            kaggle.api.authenticate()
+            kaggle.api.dataset_download_files(dataset='yusufberksardoan/traffic-detection-project', path='./dataset', unzip=True)
+            print("Dataset downloaded!")
+        except Exception as error:
+            print(f"Greska prilikom preuzimanja:\t{error}")
+            os.remove("./kaggle/kaggle.json")
+            print("kaggle.json uklonjen")
+            os.rmdir("./dataset")
+            print("Prazni direktorijum dataset uklonjen.")
+           
+
 
 def clone_yolov5_training_repo():
     # Specify the directory where you want to clone the repository
@@ -87,6 +96,7 @@ def parse_args():
     parser.add_argument("--weights", type=str, default=f"./{DEFAULT_MODEL}.pt", help="If you want to perform validation")
     parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam', 'AdamW'], default='SGD', help='optimizer')
+    parser.add_argument('--patience', type=int, default=100, help='Early stopping broj koraka za zaustavljanje')
 
     args = parser.parse_args()
     return args
@@ -112,6 +122,9 @@ def main(args):
     source = args.source
     freeze = args.freeze
     optimizer = args.optimizer
+    patience = args.patience
+    resume = args.resume
+    model_name = args.model_name
     model_train_command = [
         'python', f'./{DESTINATION_DIRECTORY}/train.py', 
         '--img', f'{image_size}', 
@@ -120,10 +133,11 @@ def main(args):
         '--data', 'dataset.yaml', 
         '--device', '0', 
         '--project', './runs/train', 
-        '--weights', f'{args.model_name}.pt',
+        '--weights', f'{model_name}.pt',
         '--freze', f'{freeze}',
-        '--resume', f'{args.resume}'
-        '--optimizer', f'{optimizer}'
+        '--resume', f'{resume}'
+        '--optimizer', f'{optimizer}',
+        '--patience', f'{patience}'
     ]
 
     model_validation_command = [
