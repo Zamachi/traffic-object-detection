@@ -124,7 +124,6 @@ def main(args):
     optimizer = args.optimizer
     patience = args.patience
     resume = args.resume
-    print(resume)
     model_name = args.model_name
     model_train_command = list(filter(lambda x: x != "", [
         'python', f'./{DESTINATION_DIRECTORY}/train.py', 
@@ -135,14 +134,11 @@ def main(args):
         '--device', '0', 
         '--project', './runs/train', 
         '--weights', f'{model_name}.pt',
-        f'--freeze {freeze}' if freeze != -1 else '', 
+        '--freeze', " ".join(str(layer) for layer in freeze) if type(freeze) == list else "", 
         '--resume' if resume else '',
         '--optimizer', f'{optimizer}',
         '--patience', f'{patience}',
     ]))
-
-    print(model_train_command)
-
     model_validation_command = [
         'python', f'./{DESTINATION_DIRECTORY}/val.py', 
         '--imgsz', f'{image_size}', 
