@@ -87,7 +87,7 @@ def parse_args():
     parser.add_argument('--img_size', type=int, default=IMG_SIZE, help='Velicina slike (hxw)')
     parser.add_argument('--batch_size', type=int, default=BATCH_SIZE, help='Batch size za trening')
     parser.add_argument('--epochs', type=int, default=NUM_EPOCHS, help='Broj epoha za trening')
-    parser.add_argument('--freeze', nargs='+', type=int, default=[0], help='Freeze layers: backbone=10, first3=0 1 2')
+    parser.add_argument('--freeze', nargs='+', type=int, default=-1, help='Freeze layers: backbone=10, first3=0 1 2')
     parser.add_argument("-train", "--train", action="store_true", help="If you want to train the model")
     parser.add_argument("-test", "--test", action="store_true", help="If you want to perform inference on a specific file to be uploaded")
     parser.add_argument("-val", "--validate", action="store_true", help="If you want to perform validation")
@@ -124,8 +124,9 @@ def main(args):
     optimizer = args.optimizer
     patience = args.patience
     resume = args.resume
+    print(resume)
     model_name = args.model_name
-    model_train_command = [
+    model_train_command = list(filter(lambda x: x != "", [
         'python', f'./{DESTINATION_DIRECTORY}/train.py', 
         '--img', f'{image_size}', 
         '--batch', f'{batch_size}', 
@@ -134,11 +135,13 @@ def main(args):
         '--device', '0', 
         '--project', './runs/train', 
         '--weights', f'{model_name}.pt',
-        '--freze', f'{freeze}',
-        '--resume', f'{resume}'
+        f'--freeze {freeze}' if freeze != -1 else '', 
+        '--resume' if resume else '',
         '--optimizer', f'{optimizer}',
-        '--patience', f'{patience}'
-    ]
+        '--patience', f'{patience}',
+    ]))
+
+    print(model_train_command)
 
     model_validation_command = [
         'python', f'./{DESTINATION_DIRECTORY}/val.py', 

@@ -1,0 +1,9 @@
+.venv
+dataset
+kaggle/*json
+__pycache__
+yolov5
+yolov5/*
+test.py
+yolov5?.pt
+runs/*
